@@ -43,6 +43,11 @@ int septarr_get_allocated_size(struct SEPTARR *ptr)
     return *ptr->allocated_size;
 }
 
+int septarr_get_type(struct SEPTARR *ptr, int index)
+{
+    return *ptr->data[index]->type;
+}
+
 int septarr_grow_if_needed(struct SEPTARR **ptr)
 {
     if(*(*ptr)->size >= *(*ptr)->allocated_size-1) {
@@ -70,11 +75,12 @@ int septarr_push_int(struct SEPTARR **ptr, int value)
 
     (*ptr)->data[*(*ptr)->size] = malloc(sizeof(struct SEPTARR_DATA));
 
-    (*ptr)->data[*(*ptr)->size]->type = malloc(sizeof(int));
+    (*ptr)->data[*(*ptr)->size]->type = malloc(sizeof(enum SEPTARR_TYPE));
     *(*ptr)->data[*(*ptr)->size]->type = SEPTARR_INT;
 
-    (*ptr)->data[*(*ptr)->size]->value = malloc(sizeof(int));
-    *((int *)(*ptr)->data[*(*ptr)->size]->value) = value;
+    (*ptr)->data[*(*ptr)->size]->value = malloc(sizeof(union SEPTARR_VALUE));
+    (*ptr)->data[*(*ptr)->size]->value->int_val = malloc(sizeof(int));
+    *(*ptr)->data[*(*ptr)->size]->value->int_val = value;
 
     *(*ptr)->size = *(*ptr)->size+1;
     (*ptr)->data[*(*ptr)->size] = NULL;
@@ -91,11 +97,12 @@ int septarr_push_float(struct SEPTARR **ptr, float value)
 
     (*ptr)->data[*(*ptr)->size] = malloc(sizeof(struct SEPTARR_DATA));
 
-    (*ptr)->data[*(*ptr)->size]->type = malloc(sizeof(int));
+    (*ptr)->data[*(*ptr)->size]->type = malloc(sizeof(enum SEPTARR_TYPE));
     *(*ptr)->data[*(*ptr)->size]->type = SEPTARR_FLOAT;
 
-    (*ptr)->data[*(*ptr)->size]->value = malloc(sizeof(float));
-    *(float *)(*ptr)->data[*(*ptr)->size]->value = value;
+    (*ptr)->data[*(*ptr)->size]->value = malloc(sizeof(union SEPTARR_VALUE));
+    (*ptr)->data[*(*ptr)->size]->value->float_val = malloc(sizeof(float));
+    *(*ptr)->data[*(*ptr)->size]->value->float_val = value;
 
     *(*ptr)->size = *(*ptr)->size+1;
     (*ptr)->data[*(*ptr)->size] = NULL;
@@ -112,11 +119,12 @@ int septarr_push_double(struct SEPTARR **ptr, double value)
 
     (*ptr)->data[*(*ptr)->size] = malloc(sizeof(struct SEPTARR_DATA));
 
-    (*ptr)->data[*(*ptr)->size]->type = malloc(sizeof(int));
+    (*ptr)->data[*(*ptr)->size]->type = malloc(sizeof(enum SEPTARR_TYPE));
     *(*ptr)->data[*(*ptr)->size]->type = SEPTARR_DOUBLE;
 
-    (*ptr)->data[*(*ptr)->size]->value = malloc(sizeof(double));
-    *(double *)(*ptr)->data[*(*ptr)->size]->value = value;
+    (*ptr)->data[*(*ptr)->size]->value = malloc(sizeof(union SEPTARR_VALUE));
+    (*ptr)->data[*(*ptr)->size]->value->double_val = malloc(sizeof(double));
+    *(*ptr)->data[*(*ptr)->size]->value->double_val = value;
 
     *(*ptr)->size = *(*ptr)->size+1;
     (*ptr)->data[*(*ptr)->size] = NULL;
@@ -133,11 +141,12 @@ int septarr_push_string(struct SEPTARR **ptr, char *value)
 
     (*ptr)->data[*(*ptr)->size] = malloc(sizeof(struct SEPTARR_DATA));
 
-    (*ptr)->data[*(*ptr)->size]->type = malloc(sizeof(int));
+    (*ptr)->data[*(*ptr)->size]->type = malloc(sizeof(enum SEPTARR_TYPE));
     *(*ptr)->data[*(*ptr)->size]->type = SEPTARR_STRING;
 
-    (*ptr)->data[*(*ptr)->size]->value = malloc(sizeof(char)*strlen(value)+1);
-    strcpy((char *)(*ptr)->data[*(*ptr)->size]->value, value);
+    (*ptr)->data[*(*ptr)->size]->value = malloc(sizeof(union SEPTARR_VALUE));
+    (*ptr)->data[*(*ptr)->size]->value->string_val = malloc(sizeof(char)*strlen(value)+1);
+    strcpy((*ptr)->data[*(*ptr)->size]->value->string_val, value);
 
     *(*ptr)->size = *(*ptr)->size+1;
     (*ptr)->data[*(*ptr)->size] = NULL;
@@ -154,10 +163,11 @@ int septarr_push_septarr(struct SEPTARR **ptr, struct SEPTARR *value)
 
     (*ptr)->data[*(*ptr)->size] = malloc(sizeof(struct SEPTARR_DATA));
 
-    (*ptr)->data[*(*ptr)->size]->type = malloc(sizeof(int));
+    (*ptr)->data[*(*ptr)->size]->type = malloc(sizeof(enum SEPTARR_TYPE));
     *(*ptr)->data[*(*ptr)->size]->type = SEPTARR_SEPTARR;
 
-    (*ptr)->data[*(*ptr)->size]->value = value;
+    (*ptr)->data[*(*ptr)->size]->value = malloc(sizeof(union SEPTARR_VALUE));
+    (*ptr)->data[*(*ptr)->size]->value->septarr_val = value;
 
     *(*ptr)->size = *(*ptr)->size+1;
     (*ptr)->data[*(*ptr)->size] = NULL;
@@ -167,33 +177,33 @@ int septarr_push_septarr(struct SEPTARR **ptr, struct SEPTARR *value)
 
 int septarr_get_int(struct SEPTARR *ptr, int index)
 {
-    return *(int *)ptr->data[index]->value;
+    return *ptr->data[index]->value->int_val;
 }
 
 float septarr_get_float(struct SEPTARR *ptr, int index)
 {
-    return *(float *)ptr->data[index]->value;
+    return *ptr->data[index]->value->float_val;
 }
 
 double septarr_get_double(struct SEPTARR *ptr, int index)
 {
-    return *(double *)ptr->data[index]->value;
+    return *ptr->data[index]->value->double_val;
 }
 
 char *septarr_get_string(struct SEPTARR *ptr, int index)
 {
-    return (char *)ptr->data[index]->value;
+    return ptr->data[index]->value->string_val;
 }
 
 struct SEPTARR *septarr_get_septarr(struct SEPTARR *ptr, int index)
 {
-    return (struct SEPTARR *)ptr->data[index]->value;
+    return ptr->data[index]->value->septarr_val;
 }
 
 int septarr_delete_element(struct SEPTARR **ptr, int index)
 {
     if(index >= *(*ptr)->size) {
-        return -1;
+        return -5;
     }
 
     int sin = septarr_shrink_if_needed(&(*ptr));
@@ -201,14 +211,29 @@ int septarr_delete_element(struct SEPTARR **ptr, int index)
         return sin;
     }
 
-    if(*(*ptr)->data[index]->type == SEPTARR_SEPTARR) {
-        struct SEPTARR *septarr = (struct SEPTARR *)(*ptr)->data[index]->value;
-        septarr_destroy(&septarr);
-    } else {
-        free((*ptr)->data[index]->value);
+    switch (*(*ptr)->data[index]->type)
+    {
+    case SEPTARR_INT:
+        free((*ptr)->data[index]->value->int_val);
+        break;
+    case SEPTARR_FLOAT:
+        free((*ptr)->data[index]->value->float_val);
+        break;
+    case SEPTARR_DOUBLE:
+        free((*ptr)->data[index]->value->double_val);
+        break;
+    case SEPTARR_STRING:
+        free((*ptr)->data[index]->value->string_val);
+        break;
+    case SEPTARR_SEPTARR:
+        septarr_destroy(&(*ptr)->data[index]->value->septarr_val);
+        break;
+    default:
+        break;
     }
-    
+
     free((*ptr)->data[index]->type);
+    free((*ptr)->data[index]->value);
 
     for(int i=index; i<*(*ptr)->size-1; i++) {
         *(*ptr)->data[i] = *(*ptr)->data[i+1];
@@ -226,14 +251,29 @@ int septarr_delete_element(struct SEPTARR **ptr, int index)
 int septarr_destroy(struct SEPTARR **ptr)
 {
     for(int i=*(*ptr)->size-1; i>=0; i--) {
-        if(*(*ptr)->data[i]->type == SEPTARR_SEPTARR) {
-            struct SEPTARR *septarr = (struct SEPTARR *)(*ptr)->data[i]->value;
-            septarr_destroy(&septarr);
-        } else {
-            free((*ptr)->data[i]->value);
+        switch (*(*ptr)->data[i]->type)
+        {
+        case SEPTARR_INT:
+            free((*ptr)->data[i]->value->int_val);
+            break;
+        case SEPTARR_FLOAT:
+            free((*ptr)->data[i]->value->float_val);
+            break;
+        case SEPTARR_DOUBLE:
+            free((*ptr)->data[i]->value->double_val);
+            break;
+        case SEPTARR_STRING:
+            free((*ptr)->data[i]->value->string_val);
+            break;
+        case SEPTARR_SEPTARR:
+            septarr_destroy(&(*ptr)->data[i]->value->septarr_val);
+            break;
+        default:
+            break;
         }
-        
+
         free((*ptr)->data[i]->type);
+        free((*ptr)->data[i]->value);
         free((*ptr)->data[i]);
     }
 

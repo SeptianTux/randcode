@@ -8,29 +8,29 @@
 void septarr_print(struct SEPTARR *ptr)
 {
     for(int i=0; i<septarr_get_size(ptr); i++) {
-        switch (*ptr->data[i]->type)
+        switch (septarr_get_type(ptr, i))
         {
-            case SEPTARR_INT :
-                printf("%d : %d : int\n", i, septarr_get_int(ptr, i));
-                break;
-            case SEPTARR_FLOAT :
-                printf("%d : %f : float\n", i, septarr_get_float(ptr, i));
-                break;
-            case SEPTARR_DOUBLE :
-                printf("%d : %f : double\n", i, septarr_get_double(ptr, i));
-                break;
-            case SEPTARR_STRING :
-                printf("%d : %s : string\n", i, septarr_get_string(ptr, i));
-                break;
-            case SEPTARR_SEPTARR :
-                printf("%d : septarr\n", i);
-                printf("==============================\n");
-                struct SEPTARR *ret = septarr_get_septarr(ptr, i);
-                septarr_print(ret);
-                printf("==============================\n");
-                break;
-            default:
-                break;
+        case SEPTARR_INT:
+            printf("%d : %d : int\n", i, septarr_get_int(ptr, i));
+            break;
+        case SEPTARR_FLOAT:
+            printf("%d : %f : float\n", i, septarr_get_float(ptr, i));
+            break;
+        case SEPTARR_DOUBLE:
+            printf("%d : %f : double\n", i, septarr_get_double(ptr, i));
+            break;
+        case SEPTARR_STRING:
+            printf("%d : %s : string\n", i, septarr_get_string(ptr, i));
+            break;
+        case SEPTARR_SEPTARR:
+            printf("%d : septarr\n", i);
+            printf("==============================\n");
+            struct SEPTARR *ret = septarr_get_septarr(ptr, i);
+            septarr_print(ret);
+            printf("==============================\n");
+            break;
+        default:
+            break;
         }
     }
 }
@@ -79,6 +79,8 @@ int main(void)
     septarr_push_string(&ptr2, "Mountain heroes water");
     septarr_push_string(&ptr2, "Flare the soup");
     septarr_push_septarr(&ptr, ptr2);
+
+    septarr_delete_element(&ptr, 11);
 
     septarr_print(ptr);
 

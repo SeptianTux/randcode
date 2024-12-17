@@ -1,16 +1,17 @@
-#include <stdbool.h>
-
-#define SEPTARR_INT         0
-#define SEPTARR_FLOAT       1
-#define SEPTARR_DOUBLE      2
-#define SEPTARR_STRING      3
-#define SEPTARR_SEPTARR     4
-
 #define SEPTARR_INIT_SIZE   2048
+
+enum SEPTARR_TYPE
+{
+    SEPTARR_INT,
+    SEPTARR_FLOAT,
+    SEPTARR_DOUBLE,
+    SEPTARR_STRING,
+    SEPTARR_SEPTARR
+};
 
 struct SEPTARR_DATA
 {
-    int *type;
+    enum SEPTARR_TYPE *type;
     void *value;
 };
 
@@ -24,6 +25,7 @@ struct SEPTARR
 struct SEPTARR *septarr_init();
 int septarr_get_size(struct SEPTARR *ptr);
 int septarr_get_allocated_size(struct SEPTARR *ptr);
+int septarr_get_type(struct SEPTARR *ptr, int index);
 int septarr_push_int(struct SEPTARR **ptr, int value);
 int septarr_push_float(struct SEPTARR **ptr, float value);
 int septarr_push_double(struct SEPTARR **ptr, double value);
