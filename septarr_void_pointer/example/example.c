@@ -5,7 +5,7 @@
     compile : gcc -Wall ../src/septarr.c ./example.c -o example
 */
 
-void septarr_print(struct SEPTARR *ptr)
+void septarr_print(struct septarr *ptr)
 {
     for(int i=0; i<septarr_get_size(ptr); i++) {
         switch (septarr_get_type(ptr, i))
@@ -25,7 +25,7 @@ void septarr_print(struct SEPTARR *ptr)
         case SEPTARR_SEPTARR:
             printf("%d : septarr\n", i);
             printf("==============================\n");
-            struct SEPTARR *ret = septarr_get_septarr(ptr, i);
+            struct septarr *ret = septarr_get_septarr(ptr, i);
             septarr_print(ret);
             printf("==============================\n");
             break;
@@ -37,7 +37,7 @@ void septarr_print(struct SEPTARR *ptr)
 
 int main(void)
 {
-    struct SEPTARR *ptr;
+    struct septarr *ptr;
 
     ptr = septarr_init();
 
@@ -70,12 +70,12 @@ int main(void)
     printf("ptr size : %d\n", septarr_get_size(ptr));
     printf("ptr allocatd size : %d\n", septarr_get_allocated_size(ptr));
 
-    struct SEPTARR *ptr1 = septarr_init();
+    struct septarr *ptr1 = septarr_init();
     septarr_push_string(&ptr1, "Rest the in loud");
     septarr_push_string(&ptr1, "Trees snow leopard");
     septarr_push_septarr(&ptr, ptr1);
 
-    struct SEPTARR *ptr2 = septarr_init();
+    struct septarr *ptr2 = septarr_init();
     septarr_push_string(&ptr2, "Mountain heroes water");
     septarr_push_string(&ptr2, "Flare the soup");
     septarr_push_septarr(&ptr, ptr2);
