@@ -34,10 +34,7 @@ struct septarr_data {
         union septarr_value *value;
 };
 
-/*
- * Here is the data structure. Every field is a pointer so we have to access
- * it using -> operator.
- */
+// Here is the data structure.
 struct septarr {
         int *size;
         int *allocated_size;
@@ -53,10 +50,10 @@ int septarr_push_float(struct septarr **ptr, float value);
 int septarr_push_double(struct septarr **ptr, double value);
 int septarr_push_string(struct septarr **ptr, char *value);
 int septarr_push_septarr(struct septarr **ptr, struct septarr *value);
-int septarr_get_int(struct septarr *ptr, int index);
-float septarr_get_float(struct septarr *ptr, int index);
-double septarr_get_double(struct septarr *ptr, int index);
-char *septarr_get_string(struct septarr *ptr, int index);
-struct septarr *septarr_get_septarr(struct septarr *ptr, int index);
-int septarr_delete_element(struct septarr **ptr, int index);
+int septarr_get_int(struct septarr *ptr, unsigned int index);
+float septarr_get_float(struct septarr *ptr, unsigned int index);
+double septarr_get_double(struct septarr *ptr, unsigned int index);
+char *septarr_get_string(struct septarr *ptr, unsigned int index);
+struct septarr *septarr_get_septarr(struct septarr *ptr, unsigned int index);
+int septarr_delete_element(struct septarr **ptr, unsigned int index);
 int septarr_destroy(struct septarr **ptr);

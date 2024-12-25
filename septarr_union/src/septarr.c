@@ -4,33 +4,55 @@
 
 /*
  * Initial function to construct the data. We have to call septarr_destroy() to
- * destroy (free()) the data after we done with the data.
+ * destroy (free()) the data after we done with the data. This function will
+ * return NULL when it fail, and then set errno.
  */
 struct septarr *septarr_init()
 {
         struct septarr *ret;
 
         ret = malloc(sizeof(*ret));
+        if (ret == NULL)
+                return NULL;
+
         ret->size = malloc(sizeof(int));
-        *ret->size = 0;
+        if (ret->size == NULL) {
+                free(ret);
+                return NULL;
+        }
+
         ret->allocated_size = malloc(sizeof(int));
-        *ret->allocated_size = SEPTARR_INIT_SIZE;
+        if (ret->allocated_size == NULL) {
+                free(ret->size);
+                free(ret);
+                return NULL;
+        }
+
         ret->data = malloc(sizeof(*ret->data)*SEPTARR_INIT_SIZE);
+        if (ret->data == NULL) {
+                free(ret->size);
+                free(ret->allocated_size);
+                free(ret);
+                return NULL;
+        }
+
+        *ret->size = 0;
+        *ret->allocated_size = SEPTARR_INIT_SIZE;
         ret->data[0] = NULL;
 
         return ret;
 }
 
 /*
- * The function that have responsbility for reallocation of the array inside the
- * data structure.
+ * This function have responsbility for reallocation of the array inside the
+ * data structure. This function will return 0 if success and return a number
+ * below zero if fail and then set errno.
  */
 int septarr_realloc(struct septarr **ptr, int new_allocated_size)
 {
         struct septarr_data **new_ptr;
         
         new_ptr = reallocarray((*ptr)->data, new_allocated_size, sizeof(*(*ptr)->data));
-        
         if (new_ptr == NULL)
                 return -1;
         
@@ -71,7 +93,8 @@ int septarr_get_type(struct septarr *ptr, int index)
 
 /*
  * The function that will grow the array inside the data structure if we need
- * to grow it.
+ * to grow it. This function will return 0 if success and return a number
+ * below zero if fail and then set errno.
  */
 int septarr_grow_if_needed(struct septarr **ptr)
 {
@@ -83,7 +106,8 @@ int septarr_grow_if_needed(struct septarr **ptr)
 
 /*
  * The function that will shrink the array inside the data structure if we need
- * to shrink it.
+ * to shrink it. This function will return 0 if success and return a number
+ * below zero if fail and then set errno.
  */
 int septarr_shrink_if_needed(struct septarr **ptr)
 {
@@ -93,114 +117,210 @@ int septarr_shrink_if_needed(struct septarr **ptr)
         return 0;
 }
 
-// Push an int value to the data structure.
+/*
+ * Push an int value to the data structure. This function will return 0 if success and return
+ * a number below zero if fail and then set errno.
+ */
 int septarr_push_int(struct septarr **ptr, int value)
 {
         int gin = septarr_grow_if_needed(&(*ptr));
-
         if (gin < 0)
                 return gin;
 
         (*ptr)->data[*(*ptr)->size] = malloc(sizeof(**(*ptr)->data));
+        if ((*ptr)->data[*(*ptr)->size] == NULL)
+                return -2;
 
         (*ptr)->data[*(*ptr)->size]->type = malloc(sizeof(*(*ptr)->data[*(*ptr)->size]->type));
-        *(*ptr)->data[*(*ptr)->size]->type = SEPTARR_INT;
+        if ((*ptr)->data[*(*ptr)->size]->type == NULL) {
+                free((*ptr)->data[*(*ptr)->size]);
+                return -3;
+        }
 
         (*ptr)->data[*(*ptr)->size]->value = malloc(sizeof(*(*ptr)->data[*(*ptr)->size]->value));
-        (*ptr)->data[*(*ptr)->size]->value->int_val = malloc(sizeof(int));
-        *(*ptr)->data[*(*ptr)->size]->value->int_val = value;
+        if ((*ptr)->data[*(*ptr)->size]->value == NULL) {
+                free((*ptr)->data[*(*ptr)->size]->type);
+                free((*ptr)->data[*(*ptr)->size]);
+                return -4;
+        }
 
+        (*ptr)->data[*(*ptr)->size]->value->int_val = malloc(sizeof(int));
+        if ((*ptr)->data[*(*ptr)->size]->value->int_val == NULL) {
+                free((*ptr)->data[*(*ptr)->size]->type);
+                free((*ptr)->data[*(*ptr)->size]->value);
+                free((*ptr)->data[*(*ptr)->size]);
+                return -5;
+        }
+
+        *(*ptr)->data[*(*ptr)->size]->type = SEPTARR_INT;
+        *(*ptr)->data[*(*ptr)->size]->value->int_val = value;
         *(*ptr)->size += 1;
         (*ptr)->data[*(*ptr)->size] = NULL;
 
         return 0;
 }
 
-// Push a float value to the data structure.
+/*
+ * Push a float value to the data structure. This function will return 0 if success and return a
+ * number below zero if fail and then set errno.
+ */
 int septarr_push_float(struct septarr **ptr, float value)
 {
         int gin = septarr_grow_if_needed(&(*ptr));
-
         if (gin < 0)
                 return gin;
 
         (*ptr)->data[*(*ptr)->size] = malloc(sizeof(**(*ptr)->data));
+        if ((*ptr)->data[*(*ptr)->size] == NULL)
+                return -2;
 
         (*ptr)->data[*(*ptr)->size]->type = malloc(sizeof(*(*ptr)->data[*(*ptr)->size]->type));
-        *(*ptr)->data[*(*ptr)->size]->type = SEPTARR_FLOAT;
+        if ((*ptr)->data[*(*ptr)->size]->type == NULL) {
+                free((*ptr)->data[*(*ptr)->size]);
+                return -3;
+        }
 
         (*ptr)->data[*(*ptr)->size]->value = malloc(sizeof(*(*ptr)->data[*(*ptr)->size]->value));
-        (*ptr)->data[*(*ptr)->size]->value->float_val = malloc(sizeof(float));
-        *(*ptr)->data[*(*ptr)->size]->value->float_val = value;
+        if ((*ptr)->data[*(*ptr)->size]->value == NULL) {
+                free((*ptr)->data[*(*ptr)->size]->type);
+                free((*ptr)->data[*(*ptr)->size]);
+                return -4;
+        }
 
+        (*ptr)->data[*(*ptr)->size]->value->float_val = malloc(sizeof(float));
+        if ((*ptr)->data[*(*ptr)->size]->value->float_val == NULL) {
+                free((*ptr)->data[*(*ptr)->size]->type);
+                free((*ptr)->data[*(*ptr)->size]->value);
+                free((*ptr)->data[*(*ptr)->size]);
+                return -5;
+        }
+
+        *(*ptr)->data[*(*ptr)->size]->type = SEPTARR_FLOAT;
+        *(*ptr)->data[*(*ptr)->size]->value->float_val = value;
         *(*ptr)->size += 1;
         (*ptr)->data[*(*ptr)->size] = NULL;
 
         return 0;
 }
 
-// Push a double value to the data structure.
+/*
+ * Push a double value to the data structure. This function will return 0 if success and return a
+ * number below zero if fail and then set errno.
+ */
 int septarr_push_double(struct septarr **ptr, double value)
 {
         int gin = septarr_grow_if_needed(&(*ptr));
-
         if (gin < 0)
                 return gin;
 
         (*ptr)->data[*(*ptr)->size] = malloc(sizeof(**(*ptr)->data));
+        if ((*ptr)->data[*(*ptr)->size] == NULL)
+                return -2;
 
         (*ptr)->data[*(*ptr)->size]->type = malloc(sizeof(*(*ptr)->data[*(*ptr)->size]->type));
-        *(*ptr)->data[*(*ptr)->size]->type = SEPTARR_DOUBLE;
+        if ((*ptr)->data[*(*ptr)->size]->type == NULL) {
+                free((*ptr)->data[*(*ptr)->size]);
+                return -3;
+        }
 
         (*ptr)->data[*(*ptr)->size]->value = malloc(sizeof(*(*ptr)->data[*(*ptr)->size]->value));
-        (*ptr)->data[*(*ptr)->size]->value->double_val = malloc(sizeof(double));
-        *(*ptr)->data[*(*ptr)->size]->value->double_val = value;
+        if ((*ptr)->data[*(*ptr)->size]->value == NULL) {
+                free((*ptr)->data[*(*ptr)->size]->type);
+                free((*ptr)->data[*(*ptr)->size]);
+                return -4;
+        }
 
+        (*ptr)->data[*(*ptr)->size]->value->double_val = malloc(sizeof(double));
+        if ((*ptr)->data[*(*ptr)->size]->value->double_val == NULL) {
+                free((*ptr)->data[*(*ptr)->size]->type);
+                free((*ptr)->data[*(*ptr)->size]->value);
+                free((*ptr)->data[*(*ptr)->size]);
+                return -5;
+        }
+
+        *(*ptr)->data[*(*ptr)->size]->type = SEPTARR_DOUBLE;
+        *(*ptr)->data[*(*ptr)->size]->value->double_val = value;
         *(*ptr)->size += 1;
         (*ptr)->data[*(*ptr)->size] = NULL;
 
         return 0;
 }
 
-// Push a string (array of char) to the data structure.
+/*
+ * Push a string value to the data structure. This function will return 0 if success and return a
+ * number below zero if fail and then set errno.
+ */
 int septarr_push_string(struct septarr **ptr, char *value)
 {
         int gin = septarr_grow_if_needed(&(*ptr));
-
         if (gin < 0)
                 return gin;
 
         (*ptr)->data[*(*ptr)->size] = malloc(sizeof(**(*ptr)->data));
+        if ((*ptr)->data[*(*ptr)->size] == NULL)
+                return -2;
 
         (*ptr)->data[*(*ptr)->size]->type = malloc(sizeof(*(*ptr)->data[*(*ptr)->size]->type));
-        *(*ptr)->data[*(*ptr)->size]->type = SEPTARR_STRING;
+        if ((*ptr)->data[*(*ptr)->size]->type == NULL) {
+                free((*ptr)->data[*(*ptr)->size]);
+                return -3;
+        }
 
         (*ptr)->data[*(*ptr)->size]->value = malloc(sizeof(*(*ptr)->data[*(*ptr)->size]->value));
-        (*ptr)->data[*(*ptr)->size]->value->string_val = malloc(sizeof(char)*strlen(value)+1);
-        strcpy((*ptr)->data[*(*ptr)->size]->value->string_val, value);
+        if ((*ptr)->data[*(*ptr)->size]->value == NULL) {
+                free((*ptr)->data[*(*ptr)->size]->type);
+                free((*ptr)->data[*(*ptr)->size]);
+                return -4;
+        }
 
+        (*ptr)->data[*(*ptr)->size]->value->string_val = malloc(sizeof(char)*strlen(value)+1);
+        if ((*ptr)->data[*(*ptr)->size]->value->string_val == NULL) {
+                free((*ptr)->data[*(*ptr)->size]->type);
+                free((*ptr)->data[*(*ptr)->size]->value);
+                free((*ptr)->data[*(*ptr)->size]);
+                return -5;
+        }
+
+        *(*ptr)->data[*(*ptr)->size]->type = SEPTARR_STRING;
+        strcpy((*ptr)->data[*(*ptr)->size]->value->string_val, value);
         *(*ptr)->size += 1;
         (*ptr)->data[*(*ptr)->size] = NULL;
 
         return 0;
 }
 
-// Push a septarr to the data structure.
+/*
+ * Push a septarr to the data structure. This function will return 0 if success and return a
+ * number below zero if fail and then set errno.
+ */
 int septarr_push_septarr(struct septarr **ptr, struct septarr *value)
 {
+        if (value == NULL)
+                return -2;
+        
         int gin = septarr_grow_if_needed(&(*ptr));
-
         if (gin < 0)
                 return gin;
 
         (*ptr)->data[*(*ptr)->size] = malloc(sizeof(**(*ptr)->data));
+        if ((*ptr)->data[*(*ptr)->size] == NULL)
+                return -3;
 
         (*ptr)->data[*(*ptr)->size]->type = malloc(sizeof(*(*ptr)->data[*(*ptr)->size]->type));
-        *(*ptr)->data[*(*ptr)->size]->type = SEPTARR_SEPTARR;
+        if ((*ptr)->data[*(*ptr)->size] == NULL) {
+                free((*ptr)->data[*(*ptr)->size]);
+                return -4;
+        }
 
         (*ptr)->data[*(*ptr)->size]->value = malloc(sizeof(*(*ptr)->data[*(*ptr)->size]->value));
-        (*ptr)->data[*(*ptr)->size]->value->septarr_val = value;
+        if ((*ptr)->data[*(*ptr)->size]->value == NULL) {
+                free((*ptr)->data[*(*ptr)->size]->type);
+                free((*ptr)->data[*(*ptr)->size]);
+                return -5;
+        }
 
+        *(*ptr)->data[*(*ptr)->size]->type = SEPTARR_SEPTARR;
+        (*ptr)->data[*(*ptr)->size]->value->septarr_val = value;
         *(*ptr)->size += 1;
         (*ptr)->data[*(*ptr)->size] = NULL;
 
@@ -218,42 +338,42 @@ int septarr_push_septarr(struct septarr **ptr, struct septarr *value)
  * 
  * This comment applied to all septarr_get_*() functions below.
  */
-int septarr_get_int(struct septarr *ptr, int index)
+int septarr_get_int(struct septarr *ptr, unsigned int index)
 {
         return *ptr->data[index]->value->int_val;
 }
 
-float septarr_get_float(struct septarr *ptr, int index)
+float septarr_get_float(struct septarr *ptr, unsigned int index)
 {
         return *ptr->data[index]->value->float_val;
 }
 
-double septarr_get_double(struct septarr *ptr, int index)
+double septarr_get_double(struct septarr *ptr, unsigned int index)
 {
         return *ptr->data[index]->value->double_val;
 }
 
-char *septarr_get_string(struct septarr *ptr, int index)
+char *septarr_get_string(struct septarr *ptr, unsigned int index)
 {
         return ptr->data[index]->value->string_val;
 }
 
-struct septarr *septarr_get_septarr(struct septarr *ptr, int index)
+struct septarr *septarr_get_septarr(struct septarr *ptr, unsigned int index)
 {
         return ptr->data[index]->value->septarr_val;
 }
 
 /*
  * The function that have a responsbility to delete an element of the array
- * inside the data structure.
+ * inside the data structure. This function will return 0 if success and return
+ * a number below zero if fail.
  */
-int septarr_delete_element(struct septarr **ptr, int index)
+int septarr_delete_element(struct septarr **ptr, unsigned int index)
 {
-        if (index >= *(*ptr)->size || index < 0)
-                return -5;
+        if (index >= *(*ptr)->size)
+                return -2;
 
         int sin = septarr_shrink_if_needed(&(*ptr));
-
         if (sin < 0)
                 return sin;
 
@@ -294,7 +414,7 @@ int septarr_delete_element(struct septarr **ptr, int index)
 }
 
 /*
- * Destoy the data structure. It will do deallocations for pointers that was allocated
+ * Destoy the data structure. It will frees the memmory that was allocated
  * during initialization and insertions.
  */
 int septarr_destroy(struct septarr **ptr)
