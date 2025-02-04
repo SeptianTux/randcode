@@ -1,6 +1,7 @@
 /*
  * Initial allocation size. It is used for reallocation data too,
- * because it will be expensive if we do reallocation every time data grow or shrink.
+ * because it will be expensive if we do reallocation every time data grow or
+ * shrink.
  */
 #define SEPTARR_INIT_SIZE   2048
 
@@ -36,15 +37,15 @@ struct septarr_data {
 
 // Here is the data structure.
 struct septarr {
-        int *size;
-        int *allocated_size;
+        unsigned int *size;
+        unsigned int *allocated_size;
         struct septarr_data **data;
 };
 
 struct septarr *septarr_init();
-int septarr_get_size(struct septarr *ptr);
-int septarr_get_allocated_size(struct septarr *ptr);
-int septarr_get_type(struct septarr *ptr, int index);
+unsigned int septarr_get_size(struct septarr *ptr);
+unsigned int septarr_get_allocated_size(struct septarr *ptr);
+unsigned int septarr_get_type(struct septarr *ptr, unsigned int index);
 int septarr_push_int(struct septarr **ptr, int value);
 int septarr_push_float(struct septarr **ptr, float value);
 int septarr_push_double(struct septarr **ptr, double value);
